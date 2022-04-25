@@ -9,13 +9,21 @@
 import { Architect, BuilderRun } from '@angular-devkit/architect';
 import { DevServerBuilderOutput } from '@angular-devkit/build-angular';
 import { normalize, virtualFs } from '@angular-devkit/core';
-import fetch from 'node-fetch'; // eslint-disable-line import/no-extraneous-dependencies
 import { createArchitect, host } from '../../../testing/test-utils';
 
 describe('Dev Server Builder', () => {
   const target = { project: 'app', target: 'serve' };
   let architect: Architect;
   let runs: BuilderRun[] = [];
+  let fetch: typeof import('node-fetch').default;
+
+  beforeAll(async () => {
+    // Temporary workaround to support ESM-only `node-fetch` package.
+    // Once TypeScript supports maintaining the dynamic import statements, the `new Function` can be removed.
+    // Once the `@angular-devkit/build-angular` package is transitioned to ESM, this can become a static import statement.
+    const fetchModule = new Function(`await import('node-fetch')`)() as typeof import('node-fetch');
+    fetch = fetchModule.default;
+  });
 
   beforeEach(async () => {
     await host.initialize().toPromise();

@@ -11,7 +11,6 @@ import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/nod
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema, workspaces } from '@angular-devkit/core';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import fetch from 'node-fetch'; // eslint-disable-line import/no-extraneous-dependencies
 import * as path from 'path';
 import { DevServerBuildOutput } from './index';
 
@@ -40,6 +39,16 @@ describe('Dev Server Builder', () => {
     );
     architect = new Architect(testArchitectHost, registry);
   }
+
+  let fetch: typeof import('node-fetch').default;
+
+  beforeAll(async () => {
+    // Temporary workaround to support ESM-only `node-fetch` package.
+    // Once TypeScript supports maintaining the dynamic import statements, the `new Function` can be removed.
+    // Once the `@angular-devkit/build-webpack` package is transitioned to ESM, this can become a static import statement.
+    const fetchModule = new Function(`await import('node-fetch')`)() as typeof import('node-fetch');
+    fetch = fetchModule.default;
+  });
 
   beforeEach(async () => {
     const ngJsonPath = path.join(__dirname, '../../test/basic-app/angular.json');

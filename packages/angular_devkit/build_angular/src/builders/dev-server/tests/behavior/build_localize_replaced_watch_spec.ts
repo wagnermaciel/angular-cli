@@ -7,7 +7,6 @@
  */
 
 /* eslint-disable max-len */
-import fetch from 'node-fetch'; // eslint-disable-line import/no-extraneous-dependencies
 import { concatMap, count, take, timeout } from 'rxjs/operators';
 import { URL } from 'url';
 import { serveWebpackBrowser } from '../../index';
@@ -51,6 +50,13 @@ describeBuilder(serveWebpackBrowser, DEV_SERVER_BUILDER_INFO, (harness) => {
           <p id="hello" i18n="An introduction header for this sample">Hello {{ title }}! </p>
         `,
       );
+
+      // Temporary workaround to support ESM-only `node-fetch` package.
+      // Once TypeScript supports maintaining the dynamic import statements, the `new Function` can be removed.
+      // Once the `@angular-devkit/build-angular` package is transitioned to ESM, this can become a static import statement.
+      const { default: fetch } = new Function(
+        `await import('node-fetch')`,
+      )() as typeof import('node-fetch');
 
       const buildCount = await harness
         .execute()

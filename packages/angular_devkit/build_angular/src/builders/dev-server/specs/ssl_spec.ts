@@ -10,7 +10,6 @@ import { Architect, BuilderRun } from '@angular-devkit/architect';
 import { DevServerBuilderOutput } from '@angular-devkit/build-angular';
 import { tags } from '@angular-devkit/core';
 import * as https from 'https';
-import fetch from 'node-fetch'; // eslint-disable-line import/no-extraneous-dependencies
 import { createArchitect, host } from '../../../testing/test-utils';
 
 describe('Dev Server Builder ssl', () => {
@@ -18,6 +17,15 @@ describe('Dev Server Builder ssl', () => {
   let architect: Architect;
   // We use runs like this to ensure it WILL stop the servers at the end of each tests.
   let runs: BuilderRun[];
+  let fetch: typeof import('node-fetch').default;
+
+  beforeAll(async () => {
+    // Temporary workaround to support ESM-only `node-fetch` package.
+    // Once TypeScript supports maintaining the dynamic import statements, the `new Function` can be removed.
+    // Once the `@angular-devkit/build-angular` package is transitioned to ESM, this can become a static import statement.
+    const fetchModule = new Function(`await import('node-fetch')`)() as typeof import('node-fetch');
+    fetch = fetchModule.default;
+  });
 
   beforeEach(async () => {
     await host.initialize().toPromise();
